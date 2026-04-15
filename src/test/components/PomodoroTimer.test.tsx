@@ -120,7 +120,7 @@ describe("PomodoroTimer", () => {
     });
 
     it("리셋 버튼 클릭 시 onReset이 호출된다", async () => {
-      const props = makeProps();
+      const props = makeProps({ state: "running", isRunning: true });
       render(<PomodoroTimer {...props} />);
       await user.click(screen.getByRole("button", { name: /리셋/ }));
       expect(props.onReset).toHaveBeenCalledTimes(1);

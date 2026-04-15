@@ -2,6 +2,8 @@
 
 import { useState, KeyboardEvent } from "react";
 import { Todo, Priority } from "@/types/todo";
+import PomodoroTimer from "@/components/PomodoroTimer";
+import { usePomodoro } from "@/hooks/usePomodoro";
 
 export interface TodoItemProps {
   todo: Todo;
@@ -10,6 +12,7 @@ export interface TodoItemProps {
   onEdit: (id: string, text: string) => void;
   dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   isDragging?: boolean;
+  initialPomodoroCount?: number;
 }
 
 const priorityBadge: Record<Priority, string> = {
@@ -24,9 +27,12 @@ const priorityLabel: Record<Priority, string> = {
   high: "높음",
 };
 
-export default function TodoItem({ todo, onToggle, onDelete, onEdit, dragHandleProps, isDragging }: TodoItemProps) {
+export default function TodoItem({ todo, onToggle, onDelete, onEdit, dragHandleProps, isDragging, initialPomodoroCount = 0 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
+  const [isPomodoroOpen, setIsPomodoroOpen] = useState(false);
+  const [pomodoroCount, setPomodoroCount] = useState(initialPomodoroCount);
+  const pomodoro = usePomodoro({ onComplete: () => setPomodoroCount((c) => c + 1) });
 
   const handleEditSave = () => {
     if (editText.trim()) {
@@ -47,7 +53,7 @@ export default function TodoItem({ todo, onToggle, onDelete, onEdit, dragHandleP
 
   return (
     <div
-      className={`group flex items-center gap-3 p-3.5 rounded-xl border transition ${
+      className={`group rounded-xl border transition ${
         isDragging
           ? "opacity-50 shadow-lg scale-[1.02] border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/30"
           : todo.completed
@@ -55,6 +61,7 @@ export default function TodoItem({ todo, onToggle, onDelete, onEdit, dragHandleP
           : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800"
       }`}
     >
+    <div className="flex items-center gap-3 p-3.5">
       <button
         {...dragHandleProps}
         aria-label="드래그 핸들"
@@ -109,6 +116,20 @@ export default function TodoItem({ todo, onToggle, onDelete, onEdit, dragHandleP
       </span>
 
       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+        <button
+          onClick={() => setIsPomodoroOpen((o) => !o)}
+          aria-label={`포모도로 타이머${isPomodoroOpen ? " 닫기" : " 열기"}`}
+          className="p-1 rounded-lg text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition relative"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {pomodoroCount > 0 && (
+            <span className="absolute -top-1 -right-1 text-[10px] w-4 h-4 flex items-center justify-center rounded-full bg-indigo-500 text-white font-bold">
+              {pomodoroCount}
+            </span>
+          )}
+        </button>
         {!todo.completed && (
           <button
             onClick={() => setIsEditing(true)}
@@ -130,6 +151,23 @@ export default function TodoItem({ todo, onToggle, onDelete, onEdit, dragHandleP
           </svg>
         </button>
       </div>
+    </div>
+    {isPomodoroOpen && (
+      <div className="px-3.5 pb-3">
+        <PomodoroTimer
+          state={pomodoro.state}
+          remainingSeconds={pomodoro.remainingSeconds}
+          completedCount={pomodoro.completedCount}
+          formattedTime={pomodoro.formattedTime}
+          isRunning={pomodoro.isRunning}
+          isBreak={pomodoro.isBreak}
+          isPaused={pomodoro.isPaused}
+          onStart={pomodoro.start}
+          onPause={pomodoro.pause}
+          onReset={pomodoro.reset}
+        />
+      </div>
+    )}
     </div>
   );
 }
