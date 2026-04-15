@@ -3,11 +3,13 @@
 import { useState, KeyboardEvent } from "react";
 import { Todo, Priority } from "@/types/todo";
 
-interface TodoItemProps {
+export interface TodoItemProps {
   todo: Todo;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (id: string, text: string) => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
+  isDragging?: boolean;
 }
 
 const priorityBadge: Record<Priority, string> = {
@@ -22,7 +24,7 @@ const priorityLabel: Record<Priority, string> = {
   high: "높음",
 };
 
-export default function TodoItem({ todo, onToggle, onDelete, onEdit }: TodoItemProps) {
+export default function TodoItem({ todo, onToggle, onDelete, onEdit, dragHandleProps, isDragging }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
 
@@ -46,11 +48,22 @@ export default function TodoItem({ todo, onToggle, onDelete, onEdit }: TodoItemP
   return (
     <div
       className={`group flex items-center gap-3 p-3.5 rounded-xl border transition ${
-        todo.completed
+        isDragging
+          ? "opacity-50 shadow-lg scale-[1.02] border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/30"
+          : todo.completed
           ? "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800"
           : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800"
       }`}
     >
+      <button
+        {...dragHandleProps}
+        aria-label="드래그 핸들"
+        className="flex-shrink-0 p-0.5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 cursor-grab active:cursor-grabbing focus:outline-none transition"
+      >
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
+        </svg>
+      </button>
       <button
         onClick={() => onToggle(todo.id)}
         className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition ${
