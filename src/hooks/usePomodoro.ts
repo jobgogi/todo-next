@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { PomodoroState } from "@/types/pomodoro";
 
@@ -55,8 +53,7 @@ export function usePomodoro(options: UsePomodoroOptions = {}) {
       setState("idle");
       setRemainingSeconds(workSecondsRef.current);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [remainingSeconds]);
+  }, [remainingSeconds, state]);
 
   const start = useCallback(() => {
     setState((prev) => {

@@ -4,12 +4,9 @@ import { PomodoroState } from "@/types/pomodoro";
 
 interface PomodoroTimerProps {
   state: PomodoroState;
-  remainingSeconds: number;
   completedCount: number;
   formattedTime: string;
-  isRunning: boolean;
   isBreak: boolean;
-  isPaused: boolean;
   onStart: () => void;
   onPause: () => void;
   onReset: () => void;
