@@ -1,9 +1,21 @@
 "use client";
 
+import {
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { useTodos } from "@/hooks/useTodos";
 import TodoInput from "@/components/TodoInput";
-import TodoItem from "@/components/TodoItem";
 import TodoFilter from "@/components/TodoFilter";
+import SortableTodoItem from "@/components/SortableTodoItem";
 
 export default function Home() {
   const {
@@ -15,10 +27,24 @@ export default function Home() {
     deleteTodo,
     editTodo,
     clearCompleted,
+    reorderTodos,
     activeCount,
     completedCount,
     totalCount,
   } = useTodos();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      reorderTodos(String(active.id), String(over.id));
+    }
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-start justify-center pt-16 pb-8 px-4">
@@ -68,15 +94,26 @@ export default function Home() {
                 </p>
               </div>
             ) : (
-              todos.map((todo) => (
-                <TodoItem
-                  key={todo.id}
-                  todo={todo}
-                  onToggle={toggleTodo}
-                  onDelete={deleteTodo}
-                  onEdit={editTodo}
-                />
-              ))
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={todos.map((t) => t.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {todos.map((todo) => (
+                    <SortableTodoItem
+                      key={todo.id}
+                      todo={todo}
+                      onToggle={toggleTodo}
+                      onDelete={deleteTodo}
+                      onEdit={editTodo}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
             )}
           </div>
 
