@@ -309,4 +309,79 @@ describe("TodoItem", () => {
       expect(screen.queryByTitle("편집")).not.toBeInTheDocument();
     });
   });
+
+  // ─────────────────────────────────────────
+  // 포모도로 통합
+  // ─────────────────────────────────────────
+  describe("포모도로 통합", () => {
+    it("포모도로 토글 버튼을 표시한다", () => {
+      render(
+        <TodoItem
+          todo={baseTodo}
+          onToggle={onToggle}
+          onDelete={onDelete}
+          onEdit={onEdit}
+        />
+      );
+      expect(
+        screen.getByRole("button", { name: /포모도로/ })
+      ).toBeInTheDocument();
+    });
+
+    it("포모도로 버튼 클릭 시 PomodoroTimer가 펼쳐진다", async () => {
+      render(
+        <TodoItem
+          todo={baseTodo}
+          onToggle={onToggle}
+          onDelete={onDelete}
+          onEdit={onEdit}
+        />
+      );
+      await user.click(screen.getByRole("button", { name: /포모도로/ }));
+      expect(screen.getByTestId("pomodoro-timer")).toBeInTheDocument();
+    });
+
+    it("포모도로 버튼을 다시 클릭하면 PomodoroTimer가 접힌다", async () => {
+      render(
+        <TodoItem
+          todo={baseTodo}
+          onToggle={onToggle}
+          onDelete={onDelete}
+          onEdit={onEdit}
+        />
+      );
+      await user.click(screen.getByRole("button", { name: /포모도로/ }));
+      await user.click(screen.getByRole("button", { name: /포모도로/ }));
+      expect(screen.queryByTestId("pomodoro-timer")).not.toBeInTheDocument();
+    });
+
+    it("완료된 포모도로가 있으면 접힌 상태에서도 횟수를 표시한다", async () => {
+      // 포모도로를 열고 타이머를 시작해 1세션 완료시키는 것은 통합 수준에서 복잡하므로
+      // completedCount prop을 통해 표시 여부만 검증
+      render(
+        <TodoItem
+          todo={baseTodo}
+          onToggle={onToggle}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          initialPomodoroCount={2}
+        />
+      );
+      expect(screen.getByText(/2/)).toBeInTheDocument();
+    });
+
+    it("완료(checked) 상태의 항목도 포모도로 버튼을 표시한다", () => {
+      render(
+        <TodoItem
+          todo={{ ...baseTodo, completed: true }}
+          onToggle={onToggle}
+          onDelete={onDelete}
+          onEdit={onEdit}
+        />
+      );
+      expect(
+        screen.getByRole("button", { name: /포모도로/ })
+      ).toBeInTheDocument();
+    });
+  });
 });
