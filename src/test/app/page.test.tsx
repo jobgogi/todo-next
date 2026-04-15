@@ -11,11 +11,11 @@ function getStatsParagraph() {
   });
 }
 
-// TodoItem 루트 div에서 토글 버튼(첫 번째 버튼) 반환
+// TodoItem 루트 div에서 토글 버튼(드래그 핸들 다음 index 1) 반환
 function getToggleButtonByText(text: string) {
   const textEl = screen.getByText(text);
   const itemRoot = textEl.closest(".group");
-  return within(itemRoot as HTMLElement).getAllByRole("button")[0];
+  return within(itemRoot as HTMLElement).getAllByRole("button")[1];
 }
 
 describe("Home (page.tsx)", () => {
@@ -178,6 +178,50 @@ describe("Home (page.tsx)", () => {
 
       expect(screen.queryByText("지울 할 일")).not.toBeInTheDocument();
       expect(screen.getByText("남길 할 일")).toBeInTheDocument();
+    });
+  });
+
+  describe("DND — 드래그 핸들", () => {
+    it("할 일 목록에 드래그 핸들이 렌더링된다", async () => {
+      render(<Home />);
+      await user.type(
+        screen.getByPlaceholderText("새로운 할 일을 입력하세요..."),
+        "운동하기"
+      );
+      await user.click(screen.getByRole("button", { name: "추가" }));
+
+      expect(
+        screen.getAllByRole("button", { name: "드래그 핸들" })
+      ).toHaveLength(1);
+    });
+
+    it("여러 항목이 있으면 각 항목마다 드래그 핸들이 있다", async () => {
+      render(<Home />);
+      const input = screen.getByPlaceholderText("새로운 할 일을 입력하세요...");
+      const addBtn = screen.getByRole("button", { name: "추가" });
+
+      await user.type(input, "할 일 A");
+      await user.click(addBtn);
+      await user.type(input, "할 일 B");
+      await user.click(addBtn);
+      await user.type(input, "할 일 C");
+      await user.click(addBtn);
+
+      expect(
+        screen.getAllByRole("button", { name: "드래그 핸들" })
+      ).toHaveLength(3);
+    });
+
+    it("드래그 핸들에 aria-roledescription 속성이 있다 (dnd-kit 접근성)", async () => {
+      render(<Home />);
+      await user.type(
+        screen.getByPlaceholderText("새로운 할 일을 입력하세요..."),
+        "운동하기"
+      );
+      await user.click(screen.getByRole("button", { name: "추가" }));
+
+      const handle = screen.getByRole("button", { name: "드래그 핸들" });
+      expect(handle).toHaveAttribute("aria-roledescription");
     });
   });
 });
