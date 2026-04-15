@@ -12,6 +12,11 @@ const baseTodo: Todo = {
   createdAt: new Date("2024-01-01"),
 };
 
+// 드래그 핸들이 index 0, 토글 버튼이 index 1
+function getToggleButton() {
+  return screen.getAllByRole("button")[1];
+}
+
 describe("TodoItem", () => {
   const onToggle = vi.fn();
   const onDelete = vi.fn();
@@ -82,8 +87,7 @@ describe("TodoItem", () => {
           onEdit={onEdit}
         />
       );
-      const textSpan = screen.getByText("테스트 할 일");
-      expect(textSpan).not.toHaveClass("line-through");
+      expect(screen.getByText("테스트 할 일")).not.toHaveClass("line-through");
     });
 
     it("완료 항목에는 취소선 스타일이 적용된다", () => {
@@ -95,8 +99,65 @@ describe("TodoItem", () => {
           onEdit={onEdit}
         />
       );
-      const textSpan = screen.getByText("테스트 할 일");
-      expect(textSpan).toHaveClass("line-through");
+      expect(screen.getByText("테스트 할 일")).toHaveClass("line-through");
+    });
+  });
+
+  describe("드래그 핸들", () => {
+    it("드래그 핸들 버튼을 렌더링한다", () => {
+      render(
+        <TodoItem
+          todo={baseTodo}
+          onToggle={onToggle}
+          onDelete={onDelete}
+          onEdit={onEdit}
+        />
+      );
+      expect(
+        screen.getByRole("button", { name: "드래그 핸들" })
+      ).toBeInTheDocument();
+    });
+
+    it("dragHandleProps가 드래그 핸들 버튼에 전달된다", () => {
+      const dragHandleProps = { "data-testid": "drag-handle", tabIndex: 0 };
+      render(
+        <TodoItem
+          todo={baseTodo}
+          onToggle={onToggle}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          dragHandleProps={dragHandleProps as React.HTMLAttributes<HTMLButtonElement>}
+        />
+      );
+      expect(screen.getByTestId("drag-handle")).toBeInTheDocument();
+    });
+
+    it("isDragging=true 이면 컨테이너에 opacity-50 클래스가 적용된다", () => {
+      const { container } = render(
+        <TodoItem
+          todo={baseTodo}
+          onToggle={onToggle}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          isDragging
+        />
+      );
+      const root = container.firstChild as HTMLElement;
+      expect(root).toHaveClass("opacity-50");
+    });
+
+    it("isDragging=false 이면 opacity-50 클래스가 없다", () => {
+      const { container } = render(
+        <TodoItem
+          todo={baseTodo}
+          onToggle={onToggle}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          isDragging={false}
+        />
+      );
+      const root = container.firstChild as HTMLElement;
+      expect(root).not.toHaveClass("opacity-50");
     });
   });
 
@@ -110,9 +171,7 @@ describe("TodoItem", () => {
           onEdit={onEdit}
         />
       );
-      // 첫 번째 버튼이 토글 버튼
-      const toggleBtn = screen.getAllByRole("button")[0];
-      await user.click(toggleBtn);
+      await user.click(getToggleButton());
       expect(onToggle).toHaveBeenCalledTimes(1);
       expect(onToggle).toHaveBeenCalledWith("test-id-1");
     });

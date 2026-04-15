@@ -294,4 +294,114 @@ describe("useTodos", () => {
       expect(result.current.totalCount).toBe(2);
     });
   });
+
+  describe("reorderTodos", () => {
+    it("activeId를 overId 위치로 이동한다", () => {
+      const { result } = renderHook(() => useTodos());
+
+      act(() => {
+        result.current.addTodo("A", "low");
+        result.current.addTodo("B", "medium");
+        result.current.addTodo("C", "high");
+      });
+      // 최신순: [C(0), B(1), A(2)]
+      const [idC, idB, idA] = result.current.todos.map((t) => t.id);
+
+      // C를 A 위치로 이동 → [B, A, C]
+      act(() => {
+        result.current.reorderTodos(idC, idA);
+      });
+
+      expect(result.current.todos.map((t) => t.text)).toEqual(["B", "A", "C"]);
+    });
+
+    it("첫 번째 항목을 마지막으로 이동한다", () => {
+      const { result } = renderHook(() => useTodos());
+
+      act(() => {
+        result.current.addTodo("A", "low");
+        result.current.addTodo("B", "medium");
+        result.current.addTodo("C", "high");
+      });
+      // [C(0), B(1), A(2)]
+      const [idC, , idA] = result.current.todos.map((t) => t.id);
+
+      // C(0)를 A(2) 위치로 → [B, A, C]
+      act(() => {
+        result.current.reorderTodos(idC, idA);
+      });
+
+      const texts = result.current.todos.map((t) => t.text);
+      expect(texts[texts.length - 1]).toBe("C");
+    });
+
+    it("마지막 항목을 첫 번째로 이동한다", () => {
+      const { result } = renderHook(() => useTodos());
+
+      act(() => {
+        result.current.addTodo("A", "low");
+        result.current.addTodo("B", "medium");
+        result.current.addTodo("C", "high");
+      });
+      // [C(0), B(1), A(2)]
+      const [idC, , idA] = result.current.todos.map((t) => t.id);
+
+      // A(2)를 C(0) 위치로 → [A, C, B]
+      act(() => {
+        result.current.reorderTodos(idA, idC);
+      });
+
+      expect(result.current.todos[0].text).toBe("A");
+    });
+
+    it("activeId와 overId가 같으면 순서가 바뀌지 않는다", () => {
+      const { result } = renderHook(() => useTodos());
+
+      act(() => {
+        result.current.addTodo("A", "low");
+        result.current.addTodo("B", "medium");
+      });
+      const before = result.current.todos.map((t) => t.text);
+      const id = result.current.todos[0].id;
+
+      act(() => {
+        result.current.reorderTodos(id, id);
+      });
+
+      expect(result.current.todos.map((t) => t.text)).toEqual(before);
+    });
+
+    it("존재하지 않는 id로 호출하면 순서가 바뀌지 않는다", () => {
+      const { result } = renderHook(() => useTodos());
+
+      act(() => {
+        result.current.addTodo("A", "low");
+        result.current.addTodo("B", "medium");
+      });
+      const before = result.current.todos.map((t) => t.text);
+
+      act(() => {
+        result.current.reorderTodos("없는-id", result.current.todos[0].id);
+      });
+
+      expect(result.current.todos.map((t) => t.text)).toEqual(before);
+    });
+
+    it("reorder 후 totalCount가 변하지 않는다", () => {
+      const { result } = renderHook(() => useTodos());
+
+      act(() => {
+        result.current.addTodo("A", "low");
+        result.current.addTodo("B", "medium");
+        result.current.addTodo("C", "high");
+      });
+      const [idC, , idA] = result.current.todos.map((t) => t.id);
+
+      act(() => {
+        result.current.reorderTodos(idC, idA);
+      });
+
+      expect(result.current.totalCount).toBe(3);
+    });
+  });
 });

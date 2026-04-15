@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { arrayMove } from "@dnd-kit/sortable";
 import { Todo, Priority, FilterType } from "@/types/todo";
 
 export function useTodos() {
@@ -42,6 +43,15 @@ export function useTodos() {
     setTodos((prev) => prev.filter((todo) => !todo.completed));
   }, []);
 
+  const reorderTodos = useCallback((activeId: string, overId: string) => {
+    setTodos((prev) => {
+      const oldIndex = prev.findIndex((t) => t.id === activeId);
+      const newIndex = prev.findIndex((t) => t.id === overId);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  }, []);
+
   const filteredTodos = todos.filter((todo) => {
     if (filter === "active") return !todo.completed;
     if (filter === "completed") return todo.completed;
@@ -60,6 +70,7 @@ export function useTodos() {
     deleteTodo,
     editTodo,
     clearCompleted,
+    reorderTodos,
     activeCount,
     completedCount,
     totalCount: todos.length,
